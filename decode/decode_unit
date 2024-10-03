@@ -1,1 +1,86 @@
+module decode_unit#(parameter
+    opcode_len = 7,
+    imm_len = 12,
+    instr_len = 32,
+    reg_dep = 32
+)(
+    output reg [$clog2(reg_dep)-1:0] rs1_addr,
+    output reg [$clog2(reg_dep)-1:0] rs2_addr,
+    output reg [$clog2(reg_dep)-1:0] rd_addr,
+    output reg [instr_len-1:0] operand_a,
+    output reg [instr_len-1:0] operand_b,
+    output reg [opcode_len-1:0] opcode,
+    output reg [imm_len-1:0] imm,
+    output reg imm_flag,
 
+    input [instr_len-1:0] instruction
+);
+
+    // Define the operation enumeration
+    typedef enum logic [4:0] {
+        BEQ = 5'b00000,
+        BNE = 5'b00001,
+        LB  = 5'b00010,
+        LH  = 5'b00011,
+        LW  = 5'b00100,
+        SB  = 5'b00101,
+        SH  = 5'b00110,
+        SW  = 5'b00111,
+        ADDI = 5'b01000,
+        SLTI = 5'b01001,
+        XORI = 5'b01010,
+        ORI  = 5'b01011,
+        ANDI = 5'b01100,
+        SLLI = 5'b01101,
+        SRLI = 5'b01110,
+        SRAI = 5'b01111,
+        ADD  = 5'b10000,
+        SUB  = 5'b10001
+    } operation;
+
+    always @(*) begin
+        // Decode the instruction
+        opcode = instruction[opcode_len-1:0]; // Extract the opcode
+        rd_addr = instruction[11:7];          // Destination register
+        rs1_addr = instruction[19:15];        // Source register 1
+        rs2_addr = instruction[24:20];        // Source register 2 (if applicable)
+
+        // Default immediate flag
+        imm_flag = 1'b0; 
+
+        // Determine immediate value and flag
+        case (opcode)
+            BEQ, BNE: begin
+                imm = instruction[31:20];     // Branch immediate
+                imm_flag = 1'b1;
+                operand_a = 0;                // Operand A is not used in branch instructions
+                operand_b = 0;                // Operand B is not used in branch instructions
+            end
+            LB, LH, LW, SB, SH, SW: begin
+                imm = instruction[31:20];     // Load/Store immediate
+                imm_flag = 1'b1;
+                operand_a = 0;                // Set operands as needed
+                operand_b = 0;                // Set operands as needed
+            end
+            ADDI, SLTI, XORI, ORI, ANDI: begin
+                imm = instruction[31:20];     // Immediate for arithmetic operations
+                imm_flag = 1'b1;
+                operand_a = rs1_addr;         // Operand A is from rs1
+                operand_b = 0;                // Immediate value used as operand B
+            end
+            ADD, SUB: begin
+                imm = 0;                       // No immediate value for R-type instructions
+                imm_flag = 1'b0;
+                operand_a = rs1_addr;         // Operand A is from rs1
+                operand_b = rs2_addr;         // Operand B is from rs2
+            end
+            default: begin
+                imm = 0;
+                imm_flag = 1'b0;
+                operand_a = 0;
+                operand_b = 0;
+            end
+        endcase
+    end
+
+endmodule

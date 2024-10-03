@@ -1,1 +1,25 @@
+module fetch_unit #(
+    parameter instr_len = 32,   // Instruction length
+    parameter reg_dep = 32       // Register length (also used for PC width)
+)(
+    output wire [instr_len-1:0] instruction,             // Fetched instruction
+    output reg [$clog2(reg_dep)-1:0] current_pc,        // Current Program Counter (PC)
+    
+    input wire [$clog2(reg_dep)-1:0] next_pc,            // Next Program Counter (PC)
+    input wire clk,                                       // Clock signal
+    input wire [instr_len-1:0] instr_from_tb,           // Instruction input from testbench
+    input wire reset_n                                    // Active-low reset signal
+);
 
+    // Assign the instruction fetched from the testbench
+    assign instruction = instr_from_tb;
+
+    // PC update logic: On every clock cycle, update PC based on reset
+    always @(posedge clk) begin
+        if (!reset_n)
+            current_pc <= 0;  // Reset PC to 0 on reset
+        else
+            current_pc <= next_pc;  // Update PC with next PC value   
+    end
+
+endmodule

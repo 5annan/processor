@@ -1,1 +1,31 @@
+module register_file #(
+    parameter ins_len = 32,      // Instruction length (bit-width of data in registers)
+    parameter reg_dep = 32       // Number of registers in the register file
+)(
+    output wire [ins_len-1:0] operand_a,                  // Output operand A (data from register rs1)
+    output wire [ins_len-1:0] operand_b,                  // Output operand B (data from register rs2)
+    
+    input wire [$clog2(reg_dep)-1:0] rs1_addr,            // Address for source register 1 (rs1)
+    input wire [$clog2(reg_dep)-1:0] rs2_addr,            // Address for source register 2 (rs2)
+    input wire [$clog2(reg_dep)-1:0] rd_addr,             // Address for destination register (rd)
+
+    input wire [ins_len-1:0] write_data,                   // Data to be written to the register
+    input wire wr_en,                                       // Write enable signal (active high)
+    input wire clk                                          // Clock signal for synchronous operations
+);
+
+    // Register file array: an array of registers to store data
+    reg [ins_len-1:0] reg_file [reg_dep-1:0];
+
+    // Assign the output operands from the corresponding registers
+    assign operand_a = reg_file[rs1_addr];  // Read data from the register at address rs1
+    assign operand_b = reg_file[rs2_addr];  // Read data from the register at address rs2
+
+    // Always block triggered on the positive edge of the clock
+    always @(posedge clk) begin
+        if (wr_en)                             // If write enable is asserted
+            reg_file[rd_addr] <= write_data;  // Write data to the register at address rd
+    end
+
+endmodule
 

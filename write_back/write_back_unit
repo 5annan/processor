@@ -1,1 +1,20 @@
+module write_back_unit #(
+    parameter data_len = 32   // Data length (bit-width of operands)
+)(
+    output reg [data_len-1:0] write_data,      // Data to be written back to register
+
+    input [data_len-1:0] alu_result,           // Result from ALU (for non-load instructions)
+    input [data_len-1:0] mem_data_out,         // Data loaded from memory
+    input mem_to_reg                          // Control signal to select between ALU result and memory data
+);
+
+    always @(*) begin
+        if (mem_to_reg) begin
+            write_data = mem_data_out;  // Select memory data for write-back
+        end else begin
+            write_data = alu_result;    // Select ALU result for write-back
+        end
+    end
+
+endmodule
 

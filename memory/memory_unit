@@ -1,1 +1,28 @@
+module memory_unit #(
+    parameter data_len = 32    // Data length (bit-width of memory data)
+)(
+    output reg [data_len-1:0] mem_data_out,   // Data output from memory (load operation)
+
+    input [data_len-1:0] alu_result,          // Address from ALU result for memory access
+    input [data_len-1:0] mem_data_in,         // Data to be stored in memory (store operation)
+    input mem_read,                           // Memory read enable
+    input mem_write,                          // Memory write enable
+    input [data_len-1:0] memory [0:255]       // Memory array (256 locations of 32-bit)
+);
+
+    always @(*) begin
+        if (mem_read) begin
+            mem_data_out = memory[alu_result];  // Load data from memory at alu_result address
+        end else begin
+            mem_data_out = 0;  // Default to 0 if no read operation
+        end
+    end
+
+    always @(posedge mem_write) begin
+        if (mem_write) begin
+            memory[alu_result] <= mem_data_in;  // Store data to memory at alu_result address
+        end
+    end
+
+endmodule
 
